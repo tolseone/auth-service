@@ -1,0 +1,6 @@
+env: "local" # dev, prod
+storage_path: "./storage/auth.db"
+grpc:
+  port: 44044
+  timeout: 10h
+token_ttl: 1h
