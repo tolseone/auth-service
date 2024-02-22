@@ -3,10 +3,12 @@ package main
 import (
 	"log/slog"
 	"os"
+	"os/signal"
+	"syscall"
 
+	"auth-service/internal/app"
 	"auth-service/internal/config"
 	"auth-service/internal/lib/logger/handlers/slogpretty"
-
 )
 
 const (
@@ -22,9 +24,24 @@ func main() {
 
 	log.Info("starting auth service", slog.Any("cfg", cfg))
 
-	// TODO: add grpc server(app)
+	application := app.New(log, cfg.GRPC.Port, cfg.StoragePath, cfg.TokenTTL)
+
+	go application.GRPCServer.MustRun()
 
 	// TODO: run grpc server of app
+
+	// Graceful shutdown
+
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT) // The program will wait for SIGINT or SIGTERM signal to terminate.
+
+	sing := <-stop
+
+	log.Info("stopping application", slog.String("signal", sing.String()))
+
+	application.GRPCServer.Stop()
+
+	log.Info("application stopped")
 }
 
 func setupLogger(env string) *slog.Logger {
