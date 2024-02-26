@@ -6,13 +6,12 @@ import (
 	"time"
 
 	"github.com/ilyakaznacheev/cleanenv"
-
 )
 
 type Config struct {
-	Env            string     `yaml:"env" env-default:"local"`
-	StoragePath    string     `yaml:"storage_path" env-required:"true"`
-	GRPC           GRPCConfig `yaml:"grpc"`
+	Env            string        `yaml:"env" env-default:"local"`
+	Storage        StorageConfig `yaml:"storage"`
+	GRPC           GRPCConfig    `yaml:"grpc"`
 	MigrationsPath string
 	TokenTTL       time.Duration `yaml:"token_ttl" env-default:"1h"`
 }
@@ -20,6 +19,14 @@ type Config struct {
 type GRPCConfig struct {
 	Port    int           `yaml:"port"`
 	Timeout time.Duration `yaml:"timeout"`
+}
+
+type StorageConfig struct {
+	Host     string `json:"host"`
+	Port     string `json:"port"`
+	Database string `json:"database"`
+	Username string `json:"username"`
+	Password string `json:"password"`
 }
 
 func MustLoad() *Config {
