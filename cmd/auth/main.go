@@ -24,7 +24,7 @@ func main() {
 
 	log.Info("starting auth service", slog.Any("cfg", cfg))
 
-	application := app.New(log, cfg.GRPC.Port, cfg.StoragePath, cfg.TokenTTL)
+	application := app.New(log, cfg.GRPC.Port, cfg.TokenTTL)
 
 	go application.GRPCServer.MustRun()
 

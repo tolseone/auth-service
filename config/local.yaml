@@ -1,5 +1,10 @@
 env: "local" # dev, prod
-storage_path: "./storage/auth.db"
+storage:
+  host: localhost # postgres
+  port: 5432
+  database: postgresauth
+  username: postgres
+  password: postgres
 grpc:
   port: 44044
   timeout: 10h
