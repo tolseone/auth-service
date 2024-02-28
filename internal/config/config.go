@@ -6,14 +6,21 @@ import (
 	"time"
 
 	"github.com/ilyakaznacheev/cleanenv"
+
 )
 
+var configPath string
+
+func init() {
+	flag.StringVar(&configPath, "config", "", "path to config file")
+	flag.Parse()
+}
+
 type Config struct {
-	Env            string        `yaml:"env" env-default:"local"`
-	Storage        StorageConfig `yaml:"storage"`
-	GRPC           GRPCConfig    `yaml:"grpc"`
-	MigrationsPath string
-	TokenTTL       time.Duration `yaml:"token_ttl" env-default:"1h"`
+	Env      string        `yaml:"env" env-default:"local"`
+	Storage  StorageConfig `yaml:"storage"`
+	GRPC     GRPCConfig    `yaml:"grpc"`
+	TokenTTL time.Duration `yaml:"token_ttl" env-default:"1h"`
 }
 
 type GRPCConfig struct {
@@ -30,7 +37,6 @@ type StorageConfig struct {
 }
 
 func MustLoad() *Config {
-	configPath := fetchConfigPath()
 	if configPath == "" {
 		panic("config path is empty")
 	}
@@ -51,20 +57,4 @@ func MustLoadPath(configPath string) *Config {
 	}
 
 	return &cfg
-}
-
-// fetchConfigPath fetches config path from command line flag or environment variable.
-// Priority: flag > env > default.
-// Default value is empty string.
-func fetchConfigPath() string {
-	var res string
-
-	flag.StringVar(&res, "config", "", "path to config file")
-	flag.Parse()
-
-	if res == "" {
-		res = os.Getenv("CONFIG_PATH")
-	}
-
-	return res
 }
