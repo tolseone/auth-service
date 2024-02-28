@@ -1,19 +1,21 @@
+// Обрабатывает взаимодейсвтие через g - RPC
+
 package auth
 
 import (
 	"context"
 
+	"github.com/google/uuid"
 	authv1 "github.com/tolseone/protos/gen/go/auth"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
 )
 
 type Auth interface {
-	RegisterNewUser(ctx context.Context, email string, password string) (userID int64, err error)
+	RegisterNewUser(ctx context.Context, email string, password string) (userID uuid.UUID, err error)
 	Login(ctx context.Context, email string, password string, app_id int) (token string, err error)
-	IsAdmin(ctx context.Context, userID int64) (bool, error)
+	IsAdmin(ctx context.Context, userID uuid.UUID) (bool, error)
 	Logout(ctx context.Context, token string) (bool, error)
 }
 
@@ -43,8 +45,14 @@ func (s *serverAPI) Register(ctx context.Context, req *authv1.RegisterRequest) (
 		return nil, status.Error(codes.Internal, "internal error")
 	}
 
+	userIDString := userID.String()
+	if userIDString == "" {
+		// TODO: ...
+		return nil, status.Error(codes.Internal, "internal error")
+	}
+
 	return &authv1.RegisterResponse{
-		UserId: userID,
+		UserId: userIDString,
 	}, nil
 }
 
@@ -69,7 +77,11 @@ func (s *serverAPI) IsAdmin(ctx context.Context, req *authv1.IsAdminRequest) (*a
 		return nil, err
 	}
 
-	isAdmin, err := s.auth.IsAdmin(ctx, req.GetUserId())
+	userID, err := uuid.Parse(req.GetUserId())
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid user id")
+	}
+	isAdmin, err := s.auth.IsAdmin(ctx, userID)
 	if err != nil {
 		// TODO: ...
 		return nil, status.Error(codes.Internal, "internal error")
@@ -125,7 +137,7 @@ func validateLogin(req *authv1.LoginRequest) error {
 }
 
 func validateIsAdmin(req *authv1.IsAdminRequest) error {
-	if req.GetUserId() == emptyValue {
+	if req.GetUserId() == "" {
 		return status.Error(codes.InvalidArgument, "user_id is required")
 	}
 
